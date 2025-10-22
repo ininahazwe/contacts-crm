@@ -285,63 +285,23 @@ export const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onC
           <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'var(--color-dark)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <MessageSquare className="w-5 h-5" />
             Historique des interactions
+            {formData.interactions && formData.interactions.length > 0 && (
+              <span style={{ 
+                fontSize: '0.875rem', 
+                fontWeight: '600',
+                padding: '0.25rem 0.75rem',
+                backgroundColor: 'var(--color-primary-100)',
+                color: 'var(--color-primary-800)',
+                borderRadius: '9999px'
+              }}>
+                {formData.interactions.length}
+              </span>
+            )}
           </h3>
           
-          {/* Formulaire nouvelle interaction */}
-          <div
-            style={{
-              padding: '1.5rem',
-              backgroundColor: 'var(--color-neutral-50)',
-              borderRadius: '1rem',
-              marginBottom: '1rem',
-            }}
-          >
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '1rem', alignItems: 'end' }}>
-              <div className="input-group" style={{ minWidth: '150px' }}>
-                <label className="label">Date</label>
-                <input
-                  type="date"
-                  value={newInteraction.date}
-                  onChange={(e) => setNewInteraction({ ...newInteraction, date: e.target.value })}
-                />
-              </div>
-              <div className="input-group">
-                <label className="label">Type</label>
-                <select
-                  value={newInteraction.type}
-                  onChange={(e) => setNewInteraction({ ...newInteraction, type: e.target.value as any })}
-                >
-                  <option value="call">Appel téléphonique</option>
-                  <option value="meeting">Rencontre</option>
-                  <option value="email">Email</option>
-                  <option value="encrypted">Message crypté</option>
-                  <option value="other">Autre</option>
-                </select>
-              </div>
-              <button
-                type="button"
-                onClick={addInteraction}
-                className="btn-primary"
-                style={{ padding: '0.875rem 1.5rem' }}
-                disabled={!newInteraction.notes}
-              >
-                <Plus className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="input-group" style={{ marginTop: '1rem' }}>
-              <label className="label">Notes</label>
-              <textarea
-                value={newInteraction.notes}
-                onChange={(e) => setNewInteraction({ ...newInteraction, notes: e.target.value })}
-                placeholder="Détails de l'interaction..."
-                style={{ minHeight: '80px' }}
-              />
-            </div>
-          </div>
-
-          {/* Liste des interactions */}
+          {/* Liste des interactions existantes */}
           {formData.interactions && formData.interactions.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
               {formData.interactions.map((interaction, index) => (
                 <div
                   key={index}
@@ -370,7 +330,11 @@ export const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onC
                           fontWeight: '600',
                         }}
                       >
-                        {interaction.type}
+                        {interaction.type === 'call' && 'Appel'}
+                        {interaction.type === 'meeting' && 'Rencontre'}
+                        {interaction.type === 'email' && 'Email'}
+                        {interaction.type === 'encrypted' && 'Crypté'}
+                        {interaction.type === 'other' && 'Autre'}
                       </span>
                     </div>
                     <p style={{ fontSize: '0.875rem', color: 'var(--color-neutral-600)', margin: 0 }}>
@@ -386,6 +350,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onC
                       cursor: 'pointer',
                       padding: '0.5rem',
                     }}
+                    title="Supprimer cette interaction"
                   >
                     <Trash2 className="w-4 h-4 text-secondary-500" />
                   </button>
@@ -393,6 +358,67 @@ export const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onC
               ))}
             </div>
           )}
+
+          {/* Formulaire nouvelle interaction */}
+          <div
+            style={{
+              padding: '1.5rem',
+              backgroundColor: 'var(--color-primary-50)',
+              border: '2px solid var(--color-primary-200)',
+              borderRadius: '1rem',
+            }}
+          >
+            <h4 style={{ fontSize: '0.875rem', fontWeight: '700', color: 'var(--color-dark)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              ➕ Ajouter une nouvelle interaction
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="input-group">
+                <label className="label">Date</label>
+                <input
+                  type="date"
+                  value={newInteraction.date}
+                  onChange={(e) => setNewInteraction({ ...newInteraction, date: e.target.value })}
+                />
+              </div>
+              <div className="input-group">
+                <label className="label">Type de contact</label>
+                <select
+                  value={newInteraction.type}
+                  onChange={(e) => setNewInteraction({ ...newInteraction, type: e.target.value as any })}
+                >
+                  <option value="call">Appel téléphonique</option>
+                  <option value="meeting">Rencontre</option>
+                  <option value="email">Email</option>
+                  <option value="encrypted">Message crypté</option>
+                  <option value="other">Autre</option>
+                </select>
+              </div>
+            </div>
+            <div className="input-group" style={{ marginBottom: '1rem' }}>
+              <label className="label">Notes de l'interaction</label>
+              <textarea
+                value={newInteraction.notes}
+                onChange={(e) => setNewInteraction({ ...newInteraction, notes: e.target.value })}
+                placeholder="Décrivez cette interaction (sujet discuté, informations obtenues, suite à donner...)"
+                style={{ minHeight: '100px' }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={addInteraction}
+              className="btn-primary"
+              style={{ width: '100%' }}
+              disabled={!newInteraction.notes || !newInteraction.date}
+            >
+              <Plus className="w-5 h-5" />
+              <span>Ajouter cette interaction</span>
+            </button>
+            {!newInteraction.notes && (
+              <p style={{ fontSize: '0.75rem', color: 'var(--color-neutral-500)', marginTop: '0.5rem', textAlign: 'center', margin: 0 }}>
+                💡 Remplissez les notes pour activer le bouton
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Actions */}
