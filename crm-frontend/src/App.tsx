@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { ContactsPage } from './pages/ContactsPage';
 import { Layout } from './components/layout/Layout';
+import { ContactDetailPage } from './pages/ContactDetailPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Routes>
           {/* Route publique */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/contacts/:id" element={<ContactDetailPage />} />
 
           {/* Routes protégées */}
           <Route

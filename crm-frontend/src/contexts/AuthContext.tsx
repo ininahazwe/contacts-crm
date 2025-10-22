@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { authService } from '../services/authService';
+import { getToken } from '../services/api';
 import type { User } from '../types';
 
 interface AuthContextType {
@@ -34,9 +35,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
+      // Verifier s'il y a un token dans localStorage
+      const token = getToken();
+      console.log('Verification du token au demarrage:', token ? 'Present' : 'Absent');
+      
+      if (token) {
+        // Si token existe, recuperer l'utilisateur actuel
+        const currentUser = await authService.getCurrentUser();
+        console.log('Utilisateur actuel:', currentUser);
+        setUser(currentUser);
+      } else {
+        console.log('Pas de token, pas d\'utilisateur connecte');
+        setUser(null);
+      }
     } catch (error) {
+      console.error('Erreur lors de la verification d\'authentification:', error);
       setUser(null);
     } finally {
       setLoading(false);

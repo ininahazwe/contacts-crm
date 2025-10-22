@@ -10,10 +10,6 @@ export const contactService = {
         limit: filters.limit || 20,
       };
 
-      // Construire l'objet where pour les filtres
-      const whereConditions: any = {};
-
-      // Recherche textuelle
       if (filters.search) {
         params['where[or][0][firstName][contains]'] = filters.search;
         params['where[or][1][lastName][contains]'] = filters.search;
@@ -21,7 +17,6 @@ export const contactService = {
         params['where[or][3][email][contains]'] = filters.search;
       }
 
-      // Filtres individuels
       if (filters.sensitivity) {
         params['where[sensitivity][equals]'] = filters.sensitivity;
       }
@@ -44,7 +39,7 @@ export const contactService = {
     }
   },
 
-  // Récupérer un contact par ID
+  // Récupérer un contact par ID (NOUVEAU)
   async getContactById(id: string): Promise<Contact> {
     try {
       const response = await api.get<Contact>(`/contacts/${id}`);
@@ -95,7 +90,7 @@ export const contactService = {
     }
   },
 
-  // Ajouter une interaction à un contact
+  // Ajouter une interaction à un contact (NOUVEAU)
   async addInteraction(contactId: string, interaction: any): Promise<Contact> {
     try {
       const contact = await this.getContactById(contactId);
@@ -108,6 +103,48 @@ export const contactService = {
       throw new Error(
         error.response?.data?.message || 
         'Erreur lors de l\'ajout de l\'interaction'
+      );
+    }
+  },
+
+  // Supprimer une interaction (NOUVEAU)
+  async deleteInteraction(contactId: string, interactionId: string): Promise<Contact> {
+    try {
+      const contact = await this.getContactById(contactId);
+      const updatedInteractions = (contact.interactions || []).filter(
+        (i) => i.id !== interactionId
+      );
+      
+      return await this.updateContact(contactId, {
+        interactions: updatedInteractions,
+      });
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || 
+        'Erreur lors de la suppression de l\'interaction'
+      );
+    }
+  },
+
+  // Mettre à jour une interaction (NOUVEAU)
+  async updateInteraction(
+    contactId: string,
+    interactionId: string,
+    updatedData: any
+  ): Promise<Contact> {
+    try {
+      const contact = await this.getContactById(contactId);
+      const updatedInteractions = (contact.interactions || []).map((i) =>
+        i.id === interactionId ? { ...i, ...updatedData } : i
+      );
+      
+      return await this.updateContact(contactId, {
+        interactions: updatedInteractions,
+      });
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || 
+        'Erreur lors de la mise à jour de l\'interaction'
       );
     }
   },

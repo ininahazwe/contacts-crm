@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Contact } from '../../types';
 import { Mail, Phone, Building2, Calendar, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -11,6 +12,8 @@ interface ContactCardProps {
 }
 
 export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDelete }) => {
+  const navigate = useNavigate();
+
   const getSensitivityBadge = (level: string) => {
     const badges = {
       low: { class: 'badge-low', label: 'Public' },
@@ -35,10 +38,23 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDel
     return `${contact.firstName.charAt(0)}${contact.lastName.charAt(0)}`.toUpperCase();
   };
 
+  const handleNavigateToDetail = () => {
+    navigate(`/contacts/${contact.id}`);
+  };
+
   return (
     <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header avec avatar et badges */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '1rem',
+          marginBottom: '1rem',
+          cursor: 'pointer',
+        }}
+        onClick={handleNavigateToDetail}
+      >
         <div
           style={{
             width: '3.5rem',
@@ -57,7 +73,22 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDel
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'var(--color-dark)', margin: 0, marginBottom: '0.5rem' }}>
+          <h3
+            style={{
+              fontSize: '1.125rem',
+              fontWeight: '700',
+              color: 'var(--color-dark)',
+              margin: 0,
+              marginBottom: '0.5rem',
+              transition: 'color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.color = 'var(--color-primary-600)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.color = 'var(--color-dark)';
+            }}
+          >
             {contact.firstName} {contact.lastName}
           </h3>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -67,7 +98,10 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDel
       </div>
 
       {/* Informations */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
+      <div
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem', cursor: 'pointer' }}
+        onClick={handleNavigateToDetail}
+      >
         {contact.organization && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Building2 className="w-4 h-4 text-neutral-400" />
