@@ -10,6 +10,7 @@ export const contactService = {
         limit: filters.limit || 20,
       };
 
+      // RECHERCHE TEXTE
       if (filters.search) {
         params['where[or][0][firstName][contains]'] = filters.search;
         params['where[or][1][lastName][contains]'] = filters.search;
@@ -17,16 +18,49 @@ export const contactService = {
         params['where[or][3][email][contains]'] = filters.search;
       }
 
+      // SENSIBILITÉ
       if (filters.sensitivity) {
         params['where[sensitivity][equals]'] = filters.sensitivity;
       }
 
+      // FIABILITÉ
       if (filters.reliability) {
         params['where[reliability][equals]'] = filters.reliability;
       }
 
+      // STATUT
       if (filters.status) {
         params['where[status][equals]'] = filters.status;
+      }
+
+      // ORGANISATION
+      if (filters.organization) {
+        params['where[organization][contains]'] = filters.organization;
+      }
+
+      // DATES - DE
+      if (filters.dateFrom) {
+        params['where[lastContact][greater_than_equal]'] = new Date(filters.dateFrom).toISOString();
+      }
+
+      // DATES - À
+      if (filters.dateTo) {
+        params['where[lastContact][less_than_equal]'] = new Date(filters.dateTo).toISOString();
+      }
+
+      // NOTES
+      if (filters.hasNotes !== undefined) {
+        if (filters.hasNotes) {
+          params['where[notes][exists]'] = true;
+        } else {
+          params['where[notes][exists]'] = false;
+        }
+      }
+
+      // TAGS (future)
+      if (filters.tags && filters.tags.length > 0) {
+        // À adapter selon votre structure de tags
+        params['where[tags][in]'] = filters.tags.join(',');
       }
 
       const response = await api.get<ContactsResponse>('/contacts', { params });
@@ -39,7 +73,7 @@ export const contactService = {
     }
   },
 
-  // Récupérer un contact par ID (NOUVEAU)
+  // Récupérer un contact par ID
   async getContactById(id: string): Promise<Contact> {
     try {
       const response = await api.get<Contact>(`/contacts/${id}`);
@@ -90,7 +124,7 @@ export const contactService = {
     }
   },
 
-  // Ajouter une interaction à un contact (NOUVEAU)
+  // Ajouter une interaction à un contact
   async addInteraction(contactId: string, interaction: any): Promise<Contact> {
     try {
       const contact = await this.getContactById(contactId);
@@ -107,7 +141,7 @@ export const contactService = {
     }
   },
 
-  // Supprimer une interaction (NOUVEAU)
+  // Supprimer une interaction
   async deleteInteraction(contactId: string, interactionId: string): Promise<Contact> {
     try {
       const contact = await this.getContactById(contactId);
@@ -126,7 +160,7 @@ export const contactService = {
     }
   },
 
-  // Mettre à jour une interaction (NOUVEAU)
+  // Mettre à jour une interaction
   async updateInteraction(
     contactId: string,
     interactionId: string,

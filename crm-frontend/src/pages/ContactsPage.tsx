@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Users as UsersIcon } from 'lucide-react';
+import { Plus, Users as UsersIcon, Download } from 'lucide-react';
 import { contactService } from '../services/contactService';
 import type { Contact, ContactFilters as Filters, ContactFormData } from '../types';
-import { ContactFilters } from '../components/contacts/ContactFilters';
+import { AdvancedFilters } from '../components/contacts/AdvancedFilters';
 import { ContactCard } from '../components/contacts/ContactCard';
 import { ContactForm } from '../components/contacts/ContactForm';
 import { Modal } from '../components/ui/Modal';
 import { LoadingSpinner } from '../components/ui/Loading';
 import { Pagination } from '../components/ui/Pagination';
+import { ExportModal } from '../components/ui/ExportModal';
 
 interface PaginationState {
   page: number;
@@ -22,7 +23,7 @@ export const ContactsPage: React.FC = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Filtres et pagination
   const [filters, setFilters] = useState<Filters>({ page: 1, limit: 20 });
   const [pagination, setPagination] = useState<PaginationState>({
@@ -33,10 +34,14 @@ export const ContactsPage: React.FC = () => {
     hasNextPage: false,
   });
 
-  // Gestion du modal
+  // Gestion du modal de contact
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Gestion du modal d'export
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportContacts, setExportContacts] = useState<Contact[]>([]);
 
   // Charger les contacts au changement de filtres
   useEffect(() => {
@@ -50,9 +55,9 @@ export const ContactsPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await contactService.getContacts(filters);
-      
+
       setContacts(response.docs);
       setPagination({
         page: response.page,
@@ -108,16 +113,16 @@ export const ContactsPage: React.FC = () => {
   const handleSubmit = async (data: ContactFormData) => {
     try {
       setIsSaving(true);
-      
+
       if (editingContact) {
         await contactService.updateContact(editingContact.id, data);
       } else {
         await contactService.createContact(data);
       }
-      
+
       setIsModalOpen(false);
       setEditingContact(undefined);
-      setFilters({ page: 1, limit: filters.limit }); // Recharger la première page
+      setFilters({ page: 1, limit: filters.limit });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la sauvegarde';
       alert(errorMessage);
@@ -140,7 +145,6 @@ export const ContactsPage: React.FC = () => {
    */
   const handlePageChange = (page: number) => {
     setFilters({ ...filters, page });
-    // Scroll vers le haut pour une meilleure UX
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -148,8 +152,34 @@ export const ContactsPage: React.FC = () => {
    * Change les filtres
    */
   const handleFilterChange = (newFilters: Filters) => {
-    // Réinitialiser à la page 1 quand les filtres changent
     setFilters({ ...newFilters, page: 1 });
+  };
+
+  /**
+   * Ouvre le modal d'export
+   */
+  const handleOpenExport = () => {
+    setExportContacts(contacts);
+    setIsExportModalOpen(true);
+  };
+
+  /**
+   * Génère un résumé des filtres appliqués
+   */
+  const generateFilterSummary = (): string => {
+    const parts: string[] = [];
+
+    if (filters.search) parts.push(`Recherche: "${filters.search}"`);
+    if (filters.status) parts.push(`Statut: ${filters.status}`);
+    if (filters.sensitivity) parts.push(`Confidentialité: ${filters.sensitivity}`);
+    if (filters.reliability) parts.push(`Fiabilité: ${filters.reliability}`);
+    if (filters.organization) parts.push(`Org: "${filters.organization}"`);
+    if (filters.dateFrom || filters.dateTo) {
+      parts.push(`Dates: ${filters.dateFrom || '?'} à ${filters.dateTo || '?'}`);
+    }
+    if (filters.hasNotes) parts.push('Avec notes');
+
+    return parts.length > 0 ? parts.join(' • ') : 'Aucun filtre';
   };
 
   return (
@@ -179,18 +209,35 @@ export const ContactsPage: React.FC = () => {
             {pagination.totalDocs} contact{pagination.totalDocs > 1 ? 's' : ''} au total
           </p>
         </div>
-        <button
-          onClick={handleCreateNew}
-          className="btn-primary"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-          }}
-        >
-          <Plus className="w-5 h-5" />
-          Nouveau contact
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={handleOpenExport}
+            disabled={contacts.length === 0}
+            className="btn-secondary"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              opacity: contacts.length === 0 ? 0.5 : 1,
+              cursor: contacts.length === 0 ? 'not-allowed' : 'pointer',
+            }}
+          >
+            <Download className="w-5 h-5" />
+            Exporter
+          </button>
+          <button
+            onClick={handleCreateNew}
+            className="btn-primary"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <Plus className="w-5 h-5" />
+            Nouveau contact
+          </button>
+        </div>
       </div>
 
       {/* Message d'erreur */}
@@ -209,8 +256,12 @@ export const ContactsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Filtres */}
-      <ContactFilters filters={filters} onFilterChange={handleFilterChange} />
+      {/* Filtres avancés */}
+      <AdvancedFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        totalResults={contacts.length}
+      />
 
       {/* Contenu principal */}
       {loading && contacts.length === 0 ? (
@@ -301,6 +352,14 @@ export const ContactsPage: React.FC = () => {
           onCancel={handleCloseModal}
         />
       </Modal>
+
+      {/* Modal d'export */}
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        contacts={exportContacts}
+        filterSummary={generateFilterSummary()}
+      />
     </div>
   );
 };

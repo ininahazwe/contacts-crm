@@ -80,12 +80,30 @@ export interface ContactsResponse {
   nextPage: number | null;
 }
 
-// Types pour les filtres
+// Types pour les filtres - MIS À JOUR
 export interface ContactFilters {
-  search?: string;
-  sensitivity?: string;
-  reliability?: string;
-  status?: string;
+  // Pagination
   page?: number;
   limit?: number;
+
+  // Recherche texte
+  search?: string;
+
+  // Filtres simples (énums)
+  sensitivity?: 'low' | 'medium' | 'high';
+  reliability?: 'low' | 'medium' | 'high';
+  status?: 'potential' | 'active' | 'verified' | 'inactive';
+
+  // Filtres texte
+  organization?: string;
+
+  // Filtres de dates
+  dateFrom?: string;  // ISO format: "2025-01-15T00:00:00.000Z"
+  dateTo?: string;    // ISO format: "2025-12-31T23:59:59.999Z"
+
+  // Filtres booléens
+  hasNotes?: boolean;
+
+  // Filtres multiples (future)
+  tags?: string[];
 }
